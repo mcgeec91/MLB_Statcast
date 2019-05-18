@@ -1,0 +1,454 @@
+USE mlb_db;
+
+UPDATE statcast 
+SET 
+    events = "catcher_interf"
+WHERE `index`= 368167;
+
+UPDATE statcast 
+SET 
+    events = "fielders_choice_out",
+    full_description = "Cedric Mullins reaches on a fielder's choice, first basebamn Ryan O'Hearn to 
+    shortstop Adalberto Mondesi. Austin Wynns out at 2nd.",
+    bb_type = "ground_ball"
+WHERE `index`= 602597;
+
+CREATE TABLE batter_walks(SELECT 
+    batter_name, events, count(*) walks
+FROM
+    statcast
+    WHERE events LIKE 'walk'
+GROUP BY batter_name);
+
+CREATE TABLE batter_home_runs(SELECT 
+    batter_name, events, count(*) home_runs
+FROM
+    statcast
+    WHERE events LIKE 'home_run'
+GROUP BY batter_name);
+
+CREATE TABLE batter_singles(SELECT 
+    batter_name, events, count(*) singles
+FROM
+    statcast
+    WHERE events LIKE 'single'
+GROUP BY batter_name);
+
+CREATE TABLE batter_doubles(SELECT 
+    batter_name, events, count(*) doubles
+FROM
+    statcast
+    WHERE events LIKE 'double'
+GROUP BY batter_name);
+
+CREATE TABLE batter_triples(SELECT 
+    batter_name, events, count(*) triples
+FROM
+    statcast
+    WHERE events LIKE 'triple'
+GROUP BY batter_name);
+
+CREATE TABLE batter_hit_by_pitch(SELECT 
+    batter_name, events, count(*) hit_by_pitch
+FROM
+    statcast
+    WHERE events LIKE 'hit_by_pitch'
+GROUP BY batter_name);
+
+CREATE TABLE batter_strikeouts(SELECT 
+    batter_name, events, count(*) strikeouts
+FROM
+    statcast
+    WHERE events LIKE '%strikeout%'
+GROUP BY batter_name);
+
+CREATE TABLE batter_field_outs(SELECT 
+    batter_name, events, count(*) field_outs
+FROM
+    statcast
+    WHERE events LIKE 'field_out'
+GROUP BY batter_name);
+
+CREATE TABLE batter_no_event_pitches(SELECT 
+    batter_name, events, count(*) no_result
+FROM
+    statcast
+    WHERE events LIKE 'no_result'
+GROUP BY batter_name);
+
+CREATE TABLE batter_sac_flies(SELECT 
+    batter_name, events, count(*) sac_flies
+FROM
+    statcast
+    WHERE events LIKE 'sac_fly'
+GROUP BY batter_name);
+
+CREATE TABLE batter_GIDP(SELECT 
+    batter_name, events, count(*) GIDP
+FROM
+    statcast
+    WHERE events LIKE 'grounded_into_double_play'
+GROUP BY batter_name);
+
+CREATE TABLE batter_field_errors(SELECT 
+    batter_name, events, count(*) field_errors
+FROM
+    statcast
+    WHERE events LIKE 'field_error'
+GROUP BY batter_name);
+
+CREATE TABLE batter_force_outs(SELECT 
+    batter_name, events, count(*) force_outs
+FROM
+    statcast
+    WHERE events LIKE 'force_out'
+GROUP BY batter_name);
+
+CREATE TABLE batter_sac_bunt_double_plays(SELECT 
+    batter_name, events, count(*) sac_bunt_double_plays
+FROM
+    statcast
+    WHERE events LIKE 'sac_bunt_double_play'
+GROUP BY batter_name);
+
+CREATE TABLE batter_sac_bunts(SELECT 
+    batter_name, events, count(*) sac_bunts
+FROM
+    statcast
+    WHERE events LIKE 'sac_bunt'
+GROUP BY batter_name);
+
+CREATE TABLE batter_double_plays(SELECT 
+    batter_name, events, count(*) double_plays
+FROM
+    statcast
+    WHERE events LIKE 'double_play'
+GROUP BY batter_name);
+
+CREATE TABLE batter_sac_fly_double_plays(SELECT 
+    batter_name, events, count(*) sac_fly_double_plays
+FROM
+    statcast
+    WHERE events LIKE 'sac_fly_double_play'
+GROUP BY batter_name);
+
+CREATE TABLE batter_triple_plays(SELECT 
+    batter_name, events, count(*) triple_plays
+FROM
+    statcast
+    WHERE events LIKE 'triple_play'
+GROUP BY batter_name);
+
+CREATE TABLE batter_catcher_interference(SELECT 
+    batter_name, events, count(*) catcher_interference
+FROM
+    statcast
+    WHERE events LIKE 'catcher_interf'
+GROUP BY batter_name);
+
+CREATE TABLE batter_batter_interference(SELECT 
+    batter_name, events, full_description, count(*) batter_interference
+FROM
+    statcast
+    WHERE events LIKE 'batter_interference'
+GROUP BY batter_name);
+
+CREATE TABLE batter_fielders_choice_outs(SELECT 
+    batter_name, events, count(*) fielders_choice_outs
+FROM
+    statcast
+    WHERE events LIKE 'fielders_choice_out'
+GROUP BY batter_name);
+
+CREATE TABLE batter_fielders_choice(SELECT 
+    batter_name, events, count(*) fielders_choice
+FROM
+    statcast
+    WHERE events LIKE 'fielders_choice'
+GROUP BY batter_name);
+
+CREATE VIEW `missing_data` AS(SELECT Name batter_name,AB,PA, IBB, GDP, SB, CS FROM fangraphs);
+
+CREATE VIEW bbevents AS (SELECT *
+FROM statcast
+WHERE events != 'no_result' AND events != 'hit_by_pitch' AND events != 'walk' AND events != 'strikeout'
+AND events != 'catcher_interf' AND events != 'batter_interference' AND events != 'other_out' AND events != 'run'
+AND events != 'pickoff_caught_stealing_2b' AND events != 'strikeout_double_play' AND events != 'caught_stealing_2b'
+AND events != 'pickoff_1b' AND events != 'caught_stealing_3b' AND events != 'pickoff_2b'
+AND events != 'pickoff_caught_stealing_3b' AND events != 'caught_stealing_home'
+AND events != 'pickoff_caught_stealing_home' AND events != 'pickoff_3b'
+AND description != 'swinging_strike_blocked' AND description != 'swinging_strike'
+AND description != 'ball' AND description != 'blocked_ball' AND description != 'called_strike' AND description != 'foul_tip'
+AND description != 'pitchout' AND description != 'foul_bunt' AND description != ' missed_bunt'
+HAVING launch_speed>0);
+
+CREATE VIEW `sac_fly_double_plays` AS(SELECT batter_name, COUNT(batter_name) SF_DP FROM bbevents
+WHERE events = 'sac_fly_double_play'
+GROUP BY batter_name);
+
+CREATE VIEW `sac_bunts` AS(SELECT batter_name, COUNT(batter_name) SF_B FROM bbevents
+WHERE events = 'sac_bunt'
+GROUP BY batter_name);
+
+CREATE VIEW `sac_bunt_double_plays` AS(SELECT batter_name, COUNT(batter_name) SF_B_DP FROM bbevents
+WHERE events = 'sac_bunt_double_play'
+GROUP BY batter_name);
+
+CREATE VIEW `sac_flys` AS(SELECT batter_name, COUNT(batter_name) SF FROM bbevents
+WHERE events = 'sac_fly'
+GROUP BY batter_name);
+
+CREATE VIEW batters AS(SELECT team, CONCAT(first_name, ' ', last_name) AS 'full_name' FROM bat_id);
+
+CREATE VIEW sacrifices AS(
+SELECT full_name, SF_B, SF_B_DP, SF, SF_DP, 
+SUM(COALESCE(SF_B,0) + COALESCE(SF_B_DP,0) + COALESCE(SF,0) + COALESCE(SF_DP,0)) total_sacrifices FROM `batters` b
+LEFT JOIN `sac_fly_double_plays` s1 ON b.full_name = s1.batter_name
+LEFT JOIN `sac_bunts` s2 ON b.full_name = s2.batter_name
+LEFT JOIN `sac_bunt_double_plays` s3 ON b.full_name = s3.batter_name
+LEFT JOIN `sac_flys` s4 ON b.full_name = s4.batter_name
+GROUP BY full_name
+);
+
+CREATE TABLE total_sacrifices
+(SELECT full_name, SUM(COALESCE(SF_B,0) + COALESCE(SF_B_DP,0) + COALESCE(SF,0) + COALESCE(SF_DP,0)) total_sacrifices FROM `sacrifices`
+GROUP BY full_name);
+
+
+CREATE TABLE exit_velocity_batters_events(SELECT `index`, batter_name, bat_team, events, description, full_description,
+launch_speed, launch_angle, launch_speed_angle, hit_distance_sc, hit_location, hc_x, hc_y, zone, 
+player_name, pitch_team, p_throws, release_speed, release_spin_rate, release_extension, effective_speed, release_pos_x, 
+balls, strikes,  release_pos_y, release_pos_z, vx0, vy0, vz0, ax, ay, az,
+pitch_type, pfx_x, pfx_z, on_1b, on_2b, on_3b, outs_when_up, inning, bat_score, fld_score, post_bat_score, 
+post_fld_score, if_fielding_alignment, of_fielding_alignment, game_date_fix
+FROM statcast
+WHERE events != 'no_result' AND events != 'hit_by_pitch' AND events != 'walk' AND events != 'strikeout'
+AND events != 'catcher_interf' AND events != 'batter_interference' AND events != 'other_out' AND events != 'run'
+AND events != 'pickoff_caught_stealing_2b' AND events != 'strikeout_double_play' AND events != 'caught_stealing_2b'
+AND events != 'pickoff_1b' AND events != 'caught_stealing_3b' AND events != 'pickoff_2b'
+AND events != 'pickoff_caught_stealing_3b' AND events != 'caught_stealing_home'
+AND events != 'pickoff_caught_stealing_home' AND events != 'pickoff_3b'
+AND description != 'swinging_strike_blocked' AND description != 'swinging_strike'
+AND description != 'ball' AND description != 'blocked_ball' AND description != 'called_strike' AND description != 'foul_tip'
+AND description != 'pitchout' AND description != 'foul_bunt' AND description != ' missed_bunt'
+);
+
+CREATE VIEW all_abs AS(
+SELECT b.full_name, COUNT(e.events) balls_in_play, ts.total_sacrifices, so.strikeouts, bi.batter_interference FROM `batters` b
+LEFT JOIN exit_velocity_batters_events e ON b.full_name = e.batter_name
+LEFT JOIN total_sacrifices ts ON b.full_name = ts.full_name
+LEFT JOIN batter_strikeouts so ON b.full_name = so.batter_name
+LEFT JOIN batter_batter_interference bi ON b.full_name = bi.batter_name
+GROUP BY b.full_name
+);
+
+CREATE VIEW plate_appearance AS(
+SELECT ab.full_name, SUM(COALESCE(ab.balls_in_play,0) + COALESCE(ab.strikeouts,0) + COALESCE(ab.batter_interference,0)) AB, ab.total_sacrifices, bb.walks , ab.strikeouts, md.ibb, hit_by_pitch, catcher_interference, md.PA
+FROM `batters` b
+LEFT JOIN all_abs ab ON b.full_name = ab.full_name
+LEFT JOIN missing_data md ON b.full_name = md.batter_name
+LEFT JOIN batter_hit_by_pitch hbp ON b.full_name = hbp.batter_name
+LEFT JOIN batter_walks bb ON b.full_name = bb.batter_name
+LEFT JOIN batter_catcher_interference ci ON b.full_name = ci.batter_name
+GROUP BY ab.full_name
+);
+
+CREATE VIEW pa_fix AS(SELECT full_name, SUM(COALESCE(total_sacrifices,0) + COALESCE(walks,0) + COALESCE(ibb,0) + COALESCE(AB,0) + COALESCE(hit_by_pitch,0)
++ COALESCE(catcher_interference,0)) PA_x, PA FROM plate_appearance
+GROUP BY full_name);
+
+
+
+CREATE TABLE ABs_bbes_pas(SELECT b.full_name, b.balls_in_play bbe, 
+SUM(COALESCE(b.balls_in_play,0) - COALESCE(b.total_sacrifices,0)
++ COALESCE(b.strikeouts,0) +  + COALESCE(b.batter_interference,0)) AB,
+SUM(COALESCE(pa.total_sacrifices,0) + COALESCE(pa.walks,0) + COALESCE(pa.ibb,0) + COALESCE(b.balls_in_play,0) - COALESCE(b.total_sacrifices,0)
++ COALESCE(b.strikeouts,0) +  + COALESCE(b.batter_interference,0) + COALESCE(pa.hit_by_pitch,0)
++ COALESCE(pa.catcher_interference,0)) pa, pa PA_x
+FROM `all_abs` b
+LEFT JOIN plate_appearance pa ON b.full_name = pa.full_name
+GROUP BY b.full_name);
+
+/* SELECT * FROM abs_bbes_pas
+WHERE PA_x != pa;
+*/
+
+ALTER TABLE ABs_bbes_pas
+DROP COLUMN pa_x;
+
+
+CREATE VIEW all_hits AS(
+SELECT b.full_name, s.singles, d.doubles, t.triples, hr.home_runs, ab.AB, 
+SUM(COALESCE(singles,0) + COALESCE(doubles,0) + COALESCE(triples,0) + COALESCE(home_runs,0)) total_hits FROM `batters` b
+LEFT JOIN batter_singles s ON b.full_name = s.batter_name
+LEFT JOIN batter_doubles d ON b.full_name = d.batter_name
+LEFT JOIN batter_triples t ON b.full_name = t.batter_name
+LEFT JOIN batter_home_runs hr ON b.full_name = hr.batter_name
+LEFT JOIN abs_bbes_pas ab ON b.full_name = ab.full_name
+GROUP BY b.full_name
+);
+
+CREATE TABLE BAA_w_hit_count (SELECT full_name,singles,doubles,triples,home_runs, COALESCE(total_hits,0) / COALESCE(AB,0) BAA
+FROM all_hits
+GROUP BY full_name);
+
+CREATE TABLE on_base_count AS(
+SELECT b.full_name,
+(SUM(COALESCE(total_hits,0) + COALESCE(bb.walks,0) + COALESCE(md.ibb,0) + COALESCE(hit_by_pitch,0))) times_OB
+FROM abs_bbes_pas b
+LEFT JOIN all_hits h ON b.full_name = h.full_name
+LEFT JOIN missing_data md ON b.full_name = md.batter_name
+LEFT JOIN batter_hit_by_pitch hbp ON b.full_name = hbp.batter_name
+LEFT JOIN batter_walks bb ON b.full_name = bb.batter_name
+WHERE total_hits is NOT NULL AND b.full_name IS NOT NULL
+GROUP BY h.full_name
+);
+
+/* 
+total_hits + walks + ibb + hit_by_pitch
+
+JOSE RAMIREZ
+156 + 91 + 15 + 8 = 270
+JOSE FERNANDEZ
+31 + 6 + 0 + 1 = 38
+*/
+UPDATE on_base_count 
+SET 
+`times_OB` = 270
+    WHERE full_name = "Jose Ramirez";
+    
+UPDATE on_base_count 
+SET 
+`times_OB` = 38
+    WHERE full_name = "Jose Fernandez";
+
+CREATE VIEW everything AS(
+SELECT b.full_name, ab.AB, ab.pa, ab.bbe,h.total_hits, h.singles, h.doubles, h.triples, h.home_runs, bb.walks, md.ibb, md.gdp, md.sb,
+s.total_sacrifices, md.cs, hit_by_pitch, 
+COALESCE(h.total_hits,0) / COALESCE(ab.AB,0) BAA, 
+(SUM(COALESCE(h.total_hits,0) - COALESCE(home_runs,0)))/ (SUM(COALESCE(ab.AB,0) - COALESCE(home_runs,0) - COALESCE(strikeouts,0) + 
+COALESCE(SF,0) + COALESCE(SF_DP,0))) BABIP,
+(COALESCE(h.total_hits,0) + COALESCE(bb.walks,0) + COALESCE(hit_by_pitch,0) - COALESCE(md.cs,0) - COALESCE(md.gdp,0)) *
+((COALESCE(h.singles,0) + (2 * COALESCE(h.doubles,0)) + (3 * COALESCE(h.triples,0)) + (4 * COALESCE(h.home_runs,0))) +
+(.26 *(COALESCE(bb.walks,0) + COALESCE(hit_by_pitch,0) - COALESCE(md.ibb,0))) + 
+(.52 *(COALESCE(md.sb,0) + COALESCE(s.total_sacrifices,0)))) /
+(COALESCE(ab.AB,0) + COALESCE(bb.walks,0) + COALESCE(hit_by_pitch,0) + COALESCE(s.total_sacrifices,0)) RC, 
+(ob.times_OB)/ (ab.PA) OBP, 
+(COALESCE(h.singles,0) + (2 * COALESCE(h.doubles,0)) + (3 * COALESCE(h.triples,0)) + (4 * COALESCE(h.home_runs,0)))/h.AB SLG,
+(COALESCE(h.doubles,0) + (2 * COALESCE(h.triples,0)) + (3 * COALESCE(h.home_runs,0)))/h.AB ISO, 
+COALESCE(total_hits,0) / COALESCE(ab.bbe,0) true_baa_bib  FROM `batters` b
+LEFT JOIN all_hits h ON b.full_name = h.full_name
+LEFT JOIN abs_bbes_pas ab ON b.full_name = ab.full_name
+LEFT JOIN missing_data md ON b.full_name = md.batter_name
+LEFT JOIN sacrifices s ON b.full_name = s.full_name
+LEFT JOIN batter_hit_by_pitch hbp ON b.full_name = hbp.batter_name
+LEFT JOIN batter_strikeouts so ON b.full_name = so.batter_name
+LEFT JOIN batter_walks bb ON b.full_name = bb.batter_name
+LEFT JOIN batter_catcher_interference ci ON b.full_name = ci.batter_name
+LEFT JOIN batter_batter_interference bi ON b.full_name = bi.batter_name
+LEFT JOIN on_base_count ob ON b.full_name = ob.full_name
+GROUP BY ab.full_name
+);
+
+
+
+CREATE VIEW SW_SP AS(SELECT batter_name, COALESCE(COUNT(launch_angle)) SW_SP, COALESCE(COUNT(launch_angle),0)/bbe SW_SP_perc FROM abs_bbes_pas ab
+LEFT JOIN bbevents m ON ab.full_name = m.batter_name
+WHERE m.launch_angle BETWEEN 8 AND 32
+GROUP BY m.batter_name)
+;
+
+CREATE VIEW SSW_SP AS(SELECT batter_name, COALESCE(COUNT(launch_angle)) SSW_SP, COALESCE(COUNT(launch_angle),0)/bbe SSW_SP_perc FROM abs_bbes_pas ab
+LEFT JOIN bbevents m ON ab.full_name = m.batter_name
+WHERE m.launch_speed >=95 AND m.launch_angle BETWEEN 8 AND 32 
+GROUP BY m.batter_name)
+;
+
+
+CREATE VIEW gb_ev AS(SELECT batter_name, AVG(launch_speed) gb_ev FROM abs_bbes_pas ab
+LEFT JOIN bbevents m ON ab.full_name = m.batter_name
+WHERE m.bb_type = 'ground_ball'
+GROUP BY m.batter_name)
+;
+
+CREATE VIEW ld_fb_ev AS(SELECT batter_name, AVG(launch_speed) ld_fb_ev FROM abs_bbes_pas ab
+LEFT JOIN bbevents m ON ab.full_name = m.batter_name
+WHERE m.bb_type = 'line_drive' OR m.bb_type = 'fly_ball'
+GROUP BY m.batter_name)
+;
+
+CREATE VIEW 95_plus_ev AS(SELECT batter_name, COUNT(launch_speed) over_95_ev, COUNT(launch_angle)/bbe 95_plus_ev FROM abs_bbes_pas ab
+LEFT JOIN bbevents m ON ab.full_name = m.batter_name
+WHERE m.launch_speed >= 95 
+GROUP BY m.batter_name)
+;
+
+CREATE VIEW perf_ang_barrel AS(SELECT batter_name, launch_speed, launch_angle FROM bbevents
+WHERE launch_speed >= 98 AND launch_angle BETWEEN 26 AND 30);
+
+CREATE VIEW fixed_lower_ang_barrels AS
+(SELECT batter_name, launch_speed, launch_angle, (launch_speed-98)/((launch_angle - 26)*-1) lower_ang_barrels 
+FROM bbevents
+WHERE launch_speed >= 98 AND launch_angle BETWEEN 8 AND 25);
+
+CREATE VIEW fixed_all_lower_ang_barrels AS(SELECT * FROM fixed_lower_ang_barrels
+HAVING lower_ang_barrels>=1);
+
+CREATE VIEW fixed_upper_ang_barrels AS
+(SELECT batter_name, launch_speed, launch_angle, (18*(launch_speed-98))/(20*(launch_angle-30)) upper_ang_barrels FROM bbevents
+WHERE launch_speed >= 98 AND launch_angle BETWEEN 31 AND 50);
+
+CREATE VIEW fixed_all_upper_ang_barrels AS(SELECT * FROM fixed_upper_ang_barrels
+HAVING upper_ang_barrels>=1);
+
+
+CREATE VIEW fixed_all_barrels AS(SELECT  batter_name, launch_speed, launch_angle
+FROM
+        (
+            SELECT  batter_name, launch_speed, launch_angle
+            FROM    fixed_all_lower_ang_barrels
+            UNION   ALL
+            SELECT  batter_name, launch_speed, launch_angle
+            FROM    fixed_all_upper_ang_barrels
+            UNION   ALL
+            SELECT  batter_name, launch_speed, launch_angle
+            FROM    perf_ang_barrel
+        ) barrels);
+        
+CREATE VIEW hrs AS (SELECT batter_name, AVG(launch_speed) avg_hr_ev, MAX(launch_speed) max_hr_speed,
+AVG(hit_distance_sc) avg_hr_distance, MAX(hit_distance_sc) max_hr_dist, AVG(launch_angle) avg_hr_la
+FROM bbevents
+WHERE events = 'home_run'
+);
+
+CREATE VIEW barrel_count AS(SELECT batter_name, COUNT(batter_name) all_barrels FROM fixed_all_barrels);
+
+CREATE TABLE 2018_mlb_batters(SELECT e.full_name batter_name, e.AB, e.pa, e.bbe, e.total_hits, COALESCE(e.singles,0) singles, 
+COALESCE(e.doubles,0) doubles, 
+COALESCE(e.triples,0) triples, COALESCE(e.home_runs,0) home_runs, COALESCE(e.walks,0) walks, 
+COALESCE(e.ibb,0) ibb, COALESCE(e.hit_by_pitch,0) hit_by_pitch, COALESCE(e.sb,0) sb, 
+COALESCE(e.cs,0) cs, COALESCE(e.total_sacrifices,0) total_sacrifices, COALESCE(e.gdp,0) gdp,
+COALESCE(e.BAA,0) BAA, COALESCE(e.BABIP,0) BABIP, COALESCE(e.RC,0) RC, COALESCE(e.RC/e.pa,0) RC_per_pa,
+COALESCE(e.OBP,0) OBP, COALESCE(e.SLG,0) SLG, COALESCE(e.ISO,0) ISO, COALESCE(e.true_baa_bib,0) true_baa_bib,
+AVG(bb.launch_angle) avg_la,
+COALESCE(sw.sw_sp/e.pa,0) SW_SP_PA, COALESCE(sw.SW_SP_perc,0) SW_SP_perc, COALESCE(ssw.ssw_sp/e.pa,0) SSW_SP_PA,
+COALESCE(ssw.SSW_SP_perc,0) SSW_SP_perc, 
+AVG(bb.launch_speed) avg_ev, MAX(bb.launch_speed) max_ev, AVG(bb.hit_distance_sc) avg_hit_distance,
+COALESCE(ld.ld_fb_ev,0) ld_fb_ev,COALESCE(gb.gb_ev,0) gb_ev,
+COALESCE(hr.max_hr_speed,0) max_hr_speed, COALESCE(hr.avg_hr_distance,0) avg_hr_distance,
+COALESCE(hr.max_hr_dist,0) max_hr_dist, COALESCE(hr.avg_hr_la,0) avg_hr_la, COALESCE(hr.avg_hr_ev,0) avg_hr_ev,
+COALESCE(hot.over_95_ev,0) over_95_ev, COALESCE(hot.95_plus_ev,0) over_95_perc,
+COALESCE(hot.95_plus_ev/e.pa,0) over_95_pa,
+COALESCE(bc.all_barrels,0) barrel_count,
+COALESCE(bc.all_barrels/e.bbe,0) barrel_perc,
+COALESCE(bc.all_barrels/e.pa,0) barrel_pa_perc 
+FROM `everything` e
+LEFT JOIN bbevents bb ON e.full_name = bb.batter_name
+LEFT JOIN barrel_count bc ON e.full_name = bc.batter_name
+LEFT JOIN hrs hr ON e.full_name = hr.batter_name
+LEFT JOIN 95_plus_ev hot ON e.full_name = hot.batter_name
+LEFT JOIN ld_fb_ev ld ON e.full_name = ld.batter_name
+LEFT JOIN gb_ev gb ON e.full_name = gb.batter_name
+LEFT JOIN ssw_sp ssw ON e.full_name = ssw.batter_name
+LEFT JOIN sw_sp sw ON e.full_name = sw.batter_name
+GROUP BY e.full_name)
