@@ -451,4 +451,21 @@ LEFT JOIN ld_fb_ev ld ON e.full_name = ld.batter_name
 LEFT JOIN gb_ev gb ON e.full_name = gb.batter_name
 LEFT JOIN ssw_sp ssw ON e.full_name = ssw.batter_name
 LEFT JOIN sw_sp sw ON e.full_name = sw.batter_name
-GROUP BY e.full_name)
+GROUP BY e.full_name);
+
+CREATE VIEW over_95_count AS(SELECT COUNT(batter_name) over_95 FROM bbevents
+WHERE launch_speed>=95);
+
+CREATE VIEW all_sw_sp AS(SELECT COUNT(batter_name) SW_SP from bbevents
+WHERE launch_angle BETWEEN 8 AND 32);
+
+CREATE VIEW over_95_plus_count AS(SELECT COUNT(batter_name) over_95_plus FROM bbevents
+WHERE launch_speed>=95 AND launch_angle BETWEEN 8 AND 32);
+
+CREATE VIEW all_barrel_count AS(SELECT SUM(all_barrels) total_barrels FROM barrel_count);
+
+CREATE TABLE statcast_league_avg(SELECT COUNT(batter_name) BBEs, ROUND(over_95/COUNT(batter_name)*100,2) over_95_perc,  
+ROUND(SW_SP/COUNT(batter_name)*100,2) sw_sp_perc, ROUND(over_95_plus/COUNT(batter_name)*100,2) SSW_SP_perc,
+ROUND(total_barrels/COUNT(batter_name)*100,2) barrel_perc
+FROM 
+bbevents, over_95_count, all_barrel_count, all_sw_sp, over_95_plus_count);
