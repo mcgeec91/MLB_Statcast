@@ -8,16 +8,24 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto:400,300,700,900);
 @import url('https://fonts.googleapis.com/css?family=Ek+Mukta:400,600,700');
 
+html {width:100%;}
 
-thead tr:first-child th { position: sticky; top: 0; }
+thead tr:first-child th { position: sticky; top: 0;}
+
+#viz {color:white;}
+
+thead {
+        cursor: pointer;
+    }
 
 table{
     overflow-y:scroll;
     overflow-x:scroll;
-   height:640px; 
+   height:1000px; 
    display:block;  
    border:1px solid red;  
    margin-top:50px;
+   color:rgb(255, 255, 255);
    position: relative;    
    }
 
@@ -42,14 +50,15 @@ body {
 .site-logo {	
 	margin-top:15px;
     float: left;
+    padding-left: 10px;
 }
 
 .site-logo a.brand {
-    color: rgb(255, 0, 0);
+    color: rgb(255, 255, 255);
 	text-transform: uppercase;
 	font-size: 30px;
-	font-family: 'Roboto', sans-serif;
-	font-weight: 900;
+	font-family: 'Palatino';
+	font-weight: 500;
 	
 }
 .site-logo a.brand:hover {
@@ -61,6 +70,7 @@ body {
 .navbar {
     background-color: blue;
     margin-bottom: 0;
+    width: 100%;
 }
 
 .navbar-brand {
@@ -130,7 +140,6 @@ body {
 }
 
 .navbar-toggle {
-    padding: 4px 6px;
     font-size: 18px;
     color: #000;
 }
@@ -150,7 +159,7 @@ body {
     text-align: center;
     font-size: 3rem;
     line-height: 10rem;
-    margin-right: 20rem;
+
     padding-top: 30px;
   }
   
@@ -228,7 +237,7 @@ body {
 
 footer {
     background-color: blue;
-}
+width: 100%}
 
 footer {
 	text-align: center;

@@ -419,9 +419,15 @@ CREATE VIEW hrs AS (SELECT batter_name, AVG(launch_speed) avg_hr_ev, MAX(launch_
 AVG(hit_distance_sc) avg_hr_distance, MAX(hit_distance_sc) max_hr_dist, AVG(launch_angle) avg_hr_la
 FROM bbevents
 WHERE events = 'home_run'
+GROUP BY batter_name
 );
 
-CREATE VIEW barrel_count AS(SELECT batter_name, COUNT(batter_name) all_barrels FROM fixed_all_barrels);
+CREATE VIEW barrel_count AS(SELECT batter_name, COUNT(batter_name) all_barrels FROM fixed_all_barrels
+GROUP BY batter_name);
+
+/* 
+Takes around ~30-40 mins to create 2018_mlb_batters table.
+*/
 
 CREATE TABLE 2018_mlb_batters(SELECT e.full_name batter_name, e.AB, e.pa, e.bbe, e.total_hits, COALESCE(e.singles,0) singles, 
 COALESCE(e.doubles,0) doubles, 
@@ -431,14 +437,14 @@ COALESCE(e.cs,0) cs, COALESCE(e.total_sacrifices,0) total_sacrifices, COALESCE(e
 COALESCE(e.BAA,0) BAA, COALESCE(e.BABIP,0) BABIP, COALESCE(e.RC,0) RC, COALESCE(e.RC/e.pa,0) RC_per_pa,
 COALESCE(e.OBP,0) OBP, COALESCE(e.SLG,0) SLG, COALESCE(e.ISO,0) ISO, COALESCE(e.true_baa_bib,0) true_baa_bib,
 AVG(bb.launch_angle) avg_la,
+AVG(bb.hit_distance_sc) avg_hit_distance, AVG(bb.launch_speed) avg_ev, MAX(bb.launch_speed) max_ev,
 COALESCE(sw.sw_sp/e.pa,0) SW_SP_PA, COALESCE(sw.SW_SP_perc,0) SW_SP_perc, COALESCE(ssw.ssw_sp/e.pa,0) SSW_SP_PA,
 COALESCE(ssw.SSW_SP_perc,0) SSW_SP_perc, 
-AVG(bb.launch_speed) avg_ev, MAX(bb.launch_speed) max_ev, AVG(bb.hit_distance_sc) avg_hit_distance,
 COALESCE(ld.ld_fb_ev,0) ld_fb_ev,COALESCE(gb.gb_ev,0) gb_ev,
 COALESCE(hr.max_hr_speed,0) max_hr_speed, COALESCE(hr.avg_hr_distance,0) avg_hr_distance,
 COALESCE(hr.max_hr_dist,0) max_hr_dist, COALESCE(hr.avg_hr_la,0) avg_hr_la, COALESCE(hr.avg_hr_ev,0) avg_hr_ev,
 COALESCE(hot.over_95_ev,0) over_95_ev, COALESCE(hot.95_plus_ev,0) over_95_perc,
-COALESCE(hot.95_plus_ev/e.pa,0) over_95_pa,
+COALESCE(hot.over_95_ev/e.pa,0) over_95_pa,
 COALESCE(bc.all_barrels,0) barrel_count,
 COALESCE(bc.all_barrels/e.bbe,0) barrel_perc,
 COALESCE(bc.all_barrels/e.pa,0) barrel_pa_perc 
@@ -469,3 +475,9 @@ ROUND(SW_SP/COUNT(batter_name)*100,2) sw_sp_perc, ROUND(over_95_plus/COUNT(batte
 ROUND(total_barrels/COUNT(batter_name)*100,2) barrel_perc
 FROM 
 bbevents, over_95_count, all_barrel_count, all_sw_sp, over_95_plus_count);
+
+/* 
+Select just players with at least 50 PA's
+*/
+SELECT * FROM mlbbb_db.2018_mlb_batters
+HAVING PA>=50;
