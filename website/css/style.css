@@ -8,6 +8,20 @@
 @import url(https://fonts.googleapis.com/css?family=Roboto:400,300,700,900);
 @import url('https://fonts.googleapis.com/css?family=Ek+Mukta:400,600,700');
 
+
+thead tr:first-child th { position: sticky; top: 0; }
+
+table{
+    overflow-y:scroll;
+    overflow-x:scroll;
+   height:640px; 
+   display:block;  
+   border:1px solid red;  
+   margin-top:50px;
+   position: relative;    
+   }
+
+
 table:hover{
     background-color: blue;
     color:rgb(0, 0, 0);
