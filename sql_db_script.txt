@@ -323,8 +323,8 @@ SET
     WHERE full_name = "Jose Fernandez";
 
 CREATE VIEW everything AS(
-SELECT b.full_name, ab.AB, ab.pa, ab.bbe,h.total_hits, h.singles, h.doubles, h.triples, h.home_runs, bb.walks, md.ibb, md.gdp, md.sb,
-s.total_sacrifices, md.cs, hit_by_pitch, 
+SELECT b.full_name, ab.AB, ab.pa, ab.bbe,h.total_hits, h.singles, h.doubles, h.triples, h.home_runs, bb.walks, md.ibb,
+COALESCE(strikeouts,0) SO, md.gdp, md.sb, s.total_sacrifices, md.cs, hit_by_pitch, 
 COALESCE(h.total_hits,0) / COALESCE(ab.AB,0) BAA, 
 (SUM(COALESCE(h.total_hits,0) - COALESCE(home_runs,0)))/ (SUM(COALESCE(ab.AB,0) - COALESCE(home_runs,0) - COALESCE(strikeouts,0) + 
 COALESCE(SF,0) + COALESCE(SF_DP,0))) BABIP,
@@ -333,7 +333,7 @@ COALESCE(SF,0) + COALESCE(SF_DP,0))) BABIP,
 (.26 *(COALESCE(bb.walks,0) + COALESCE(hit_by_pitch,0) - COALESCE(md.ibb,0))) + 
 (.52 *(COALESCE(md.sb,0) + COALESCE(s.total_sacrifices,0)))) /
 (COALESCE(ab.AB,0) + COALESCE(bb.walks,0) + COALESCE(hit_by_pitch,0) + COALESCE(s.total_sacrifices,0)) RC, 
-(ob.times_OB)/ (ab.PA) OBP, 
+(ob.times_OB)/ ((ab.PA)- COALESCE(SF_B,0) - COALESCE(SF_B_DP,0)) OBP, 
 (COALESCE(h.singles,0) + (2 * COALESCE(h.doubles,0)) + (3 * COALESCE(h.triples,0)) + (4 * COALESCE(h.home_runs,0)))/h.AB SLG,
 (COALESCE(h.doubles,0) + (2 * COALESCE(h.triples,0)) + (3 * COALESCE(h.home_runs,0)))/h.AB ISO, 
 COALESCE(total_hits,0) / COALESCE(ab.bbe,0) true_baa_bib  FROM `batters` b
@@ -425,6 +425,44 @@ GROUP BY batter_name
 CREATE VIEW barrel_count AS(SELECT batter_name, COUNT(batter_name) all_barrels FROM fixed_all_barrels
 GROUP BY batter_name);
 
+CREATE VIEW my_Sw_Sp AS(SELECT batter_name, launch_angle, launch_speed, events FROM bbevents
+WHERE launch_speed >=95 AND launch_angle BETWEEN 11 AND 32);
+
+CREATE VIEW lower_my_Sw_Sp AS
+(SELECT batter_name, launch_speed, launch_angle, (launch_speed-95)/((launch_angle - 11)*-3.33333) lower_ang_sw_sp 
+FROM bbevents
+WHERE launch_speed >= 95 AND launch_angle BETWEEN 8 AND 10);
+
+
+CREATE VIEW fixed_fixed_lower_my_Sw_Sp AS(SELECT * FROM lower_my_Sw_Sp
+HAVING lower_ang_Sw_Sp>=1);
+
+CREATE VIEW upper_my_Sw_Sp AS
+(SELECT batter_name, launch_speed, launch_angle, (7*(launch_speed-98))/(6*(launch_angle-32)) upper_my_Sw_Sp FROM bbevents
+WHERE launch_speed >= 98 AND launch_angle BETWEEN 33 AND 50);
+
+
+CREATE VIEW fixed_upper_my_Sw_Sp AS(SELECT * FROM upper_my_Sw_Sp
+HAVING upper_my_Sw_Sp>=1);
+
+
+CREATE VIEW all_my_Sw_Sp AS(SELECT  batter_name, launch_speed, launch_angle
+FROM
+        (
+            SELECT  batter_name, launch_speed, launch_angle
+            FROM    fixed_fixed_lower_my_Sw_Sp
+            UNION   ALL
+            SELECT  batter_name, launch_speed, launch_angle
+            FROM    fixed_upper_my_Sw_Sp
+            UNION   ALL
+            SELECT  batter_name, launch_speed, launch_angle
+            FROM    my_sw_sp
+        ) barrels);
+        
+CREATE VIEW my_Sw_Sp_count AS(SELECT batter_name, COUNT(batter_name) my_Sw_Sp FROM all_my_Sw_Sp
+GROUP BY batter_name);
+        
+
 /* 
 Takes around ~30-40 mins to create 2018_mlb_batters table.
 */
@@ -432,14 +470,17 @@ Takes around ~30-40 mins to create 2018_mlb_batters table.
 CREATE TABLE 2018_mlb_batters(SELECT e.full_name batter_name, e.AB, e.pa, e.bbe, e.total_hits, COALESCE(e.singles,0) singles, 
 COALESCE(e.doubles,0) doubles, 
 COALESCE(e.triples,0) triples, COALESCE(e.home_runs,0) home_runs, COALESCE(e.walks,0) walks, 
-COALESCE(e.ibb,0) ibb, COALESCE(e.hit_by_pitch,0) hit_by_pitch, COALESCE(e.sb,0) sb, 
+COALESCE(e.ibb,0) ibb, e.SO, COALESCE(e.hit_by_pitch,0) hit_by_pitch, COALESCE(e.sb,0) sb, 
 COALESCE(e.cs,0) cs, COALESCE(e.total_sacrifices,0) total_sacrifices, COALESCE(e.gdp,0) gdp,
 COALESCE(e.BAA,0) BAA, COALESCE(e.BABIP,0) BABIP, COALESCE(e.RC,0) RC, COALESCE(e.RC/e.pa,0) RC_per_pa,
 COALESCE(e.OBP,0) OBP, COALESCE(e.SLG,0) SLG, COALESCE(e.ISO,0) ISO, COALESCE(e.true_baa_bib,0) true_baa_bib,
 AVG(bb.launch_angle) avg_la,
-AVG(bb.hit_distance_sc) avg_hit_distance, AVG(bb.launch_speed) avg_ev, MAX(bb.launch_speed) max_ev,
-COALESCE(sw.sw_sp/e.pa,0) SW_SP_PA, COALESCE(sw.SW_SP_perc,0) SW_SP_perc, COALESCE(ssw.ssw_sp/e.pa,0) SSW_SP_PA,
-COALESCE(ssw.SSW_SP_perc,0) SSW_SP_perc, 
+AVG(bb.hit_distance_sc) avg_hit_distance, AVG(bb.launch_speed) avg_ev, MAX(bb.launch_speed) max_ev, COALESCE(sw.sw_sp,0) Sw_SP,
+COALESCE(sw.sw_sp/e.pa,0) SW_SP_PA, COALESCE(sw.SW_SP_perc,0) SW_SP_perc,
+COALESCE(ssw.ssw_sp,0) SSW_SP, COALESCE(ssw.ssw_sp/e.pa,0) SSW_SP_PA,
+COALESCE(ssw.SSW_SP_perc,0) SSW_SP_perc,
+COALESCE(mssw.my_sw_sp,0) MY_SW_SP,
+COALESCE(mssw.my_sw_sp/e.pa,0) MY_SW_SP_PA, COALESCE(mssw.my_SW_SP/e.bbe,0) MY_SW_SP_perc, 
 COALESCE(ld.ld_fb_ev,0) ld_fb_ev,COALESCE(gb.gb_ev,0) gb_ev,
 COALESCE(hr.max_hr_speed,0) max_hr_speed, COALESCE(hr.avg_hr_distance,0) avg_hr_distance,
 COALESCE(hr.max_hr_dist,0) max_hr_dist, COALESCE(hr.avg_hr_la,0) avg_hr_la, COALESCE(hr.avg_hr_ev,0) avg_hr_ev,
@@ -457,6 +498,7 @@ LEFT JOIN ld_fb_ev ld ON e.full_name = ld.batter_name
 LEFT JOIN gb_ev gb ON e.full_name = gb.batter_name
 LEFT JOIN ssw_sp ssw ON e.full_name = ssw.batter_name
 LEFT JOIN sw_sp sw ON e.full_name = sw.batter_name
+LEFT JOIN my_sw_sp_count mssw ON e.full_name = mssw.batter_name
 GROUP BY e.full_name);
 
 CREATE VIEW over_95_count AS(SELECT COUNT(batter_name) over_95 FROM bbevents
@@ -479,5 +521,5 @@ bbevents, over_95_count, all_barrel_count, all_sw_sp, over_95_plus_count);
 /* 
 Select just players with at least 50 PA's
 */
-SELECT * FROM mlbbb_db.2018_mlb_batters
+SELECT * FROM mlb_db.2018_mlb_batters
 HAVING PA>=50;
